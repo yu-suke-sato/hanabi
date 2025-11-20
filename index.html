@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>花火打ち上げ高度計測アプリ</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .left-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .right-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #ffd700, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .scroll-area {
+            width: 100%;
+            height: 600px;
+            border: 3px solid #ffd700;
+            border-radius: 15px;
+            overflow-y: scroll;
+            background: linear-gradient(180deg, #000428, #004e92);
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .scroll-content {
+            height: 2000px;
+            background: linear-gradient(180deg, 
+                #000428 0%, 
+                #004e92 25%, 
+                #009ffd 50%, 
+                #00d2ff 75%, 
+                #87ceeb 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .firework {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #ffd700, #ff6b6b);
+            border-radius: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px #ffd700;
+            opacity: 1;
+            transition: none;
+            bottom: 10px;
+            z-index: 5;
+        }
+
+        .explosion {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, 
+                rgba(255, 215, 0, 0.8) 0%,
+                rgba(255, 107, 107, 0.6) 30%,
+                rgba(255, 20, 147, 0.4) 60%,
+                rgba(138, 43, 226, 0.2) 80%,
+                transparent 100%);
+            left: 50%;
+            transform: translateX(-50%) translateY(-50%);
+            opacity: 0;
+            animation: explode 2s ease-out;
+            z-index: 10;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: translateX(-50%) translateY(-50%) scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: translateX(-50%) translateY(-50%) scale(1.5);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateX(-50%) translateY(-50%) scale(3);
+                opacity: 0;
+            }
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ffd700);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .stats {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats h3 {
+            margin-top: 0;
+            color: #ffd700;
+            font-size: 1.3em;
+        }
+
+        .stats p {
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        th {
+            background: rgba(255, 215, 0, 0.3);
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        tr:hover {
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .instruction {
+            background: rgba(255, 215, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎆 花火打ち上げ高度計測アプリ 🎆</h1>
+    
+    <div class="container">
+        <div class="left-panel">
+            <div class="instruction">
+                下から上に向かって素早くスクロールしてください！
+            </div>
+            
+            <div class="scroll-area" id="scrollArea">
+                <div class="scroll-content" id="scrollContent">
+                    <div class="firework" id="firework"></div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="reset-btn" onclick="resetMeasurement()">🔄 リセット</button>
+            </div>
+            
+            <div class="stats" id="stats">
+                <h3>📊 計測結果</h3>
+                <p>スクロール初速度: <span id="initialVelocity">未計測</span></p>
+                <p>最高高度: <span id="maxHeight">未計測</span></p>
+                <p>着地時間: <span id="landingTime">未計測</span></p>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <h3 style="text-align: center; color: #ffd700; margin-bottom: 20px;">📈 高度変化データ</h3>
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>時間 (秒)</th>
+                            <th>高度 (m)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="2">スクロールして計測開始</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let hasScrolled = false;
+        let initialVelocity = 0;
+        let maxHeight = 0;
+        let landingTime = 0;
+        let isAnimating = false;
+        let physicalVelocity = 0;
+
+        const scrollArea = document.getElementById('scrollArea');
+        const firework = document.getElementById('firework');
+        const scrollContent = document.getElementById('scrollContent');
+
+        let lastScrollTop = 0;
+        let lastScrollTime = 0;
+        let scrollVelocities = [];
+
+        scrollArea.addEventListener('scroll', function(e) {
+            if (hasScrolled || isAnimating) return;
+
+            const currentTime = Date.now();
+            const currentScrollTop = scrollArea.scrollTop;
+            
+            if (lastScrollTime === 0) {
+                lastScrollTime = currentTime;
+                lastScrollTop = currentScrollTop;
+                return;
+            }
+            
+            const timeDiff = (currentTime - lastScrollTime) / 1000;
+            const scrollDiff = lastScrollTop - currentScrollTop;
+            
+            if (timeDiff > 0 && scrollDiff > 0) {
+                const velocity = scrollDiff / timeDiff;
+                scrollVelocities.push(velocity);
+                
+                if (!hasScrolled && scrollVelocities.length >= 1) {
+                    hasScrolled = true;
+                    initialVelocity = Math.max(...scrollVelocities, 100);
+                    calculateTrajectory();
+                    startFireworkAnimation();
+                }
+                
+                if (scrollVelocities.length > 10) {
+                    scrollVelocities.shift();
+                }
+            }
+            
+            lastScrollTop = currentScrollTop;
+            lastScrollTime = currentTime;
+        });
+
+        function calculateTrajectory() {
+            const gravity = 9.8;
+            
+            // より自然な変換関数：対数関数とべき乗を組み合わせ
+            // 低速域では敏感に、高速域では緩やかに変化
+            let baseVelocity;
+            if (initialVelocity <= 1000) {
+                // 低速域：線形に近い変換
+                baseVelocity = initialVelocity * 0.025;
+            } else if (initialVelocity <= 5000) {
+                // 中速域：対数的変換
+                baseVelocity = 25 + Math.log(initialVelocity / 1000) * 12.5;
+            } else {
+                // 高速域：さらに緩やかな対数変換
+                baseVelocity = 45 + Math.log(initialVelocity / 5000) * 7.5;
+            }
+            
+            // 最低1.5m/s、最高60m/sの範囲に制限
+            physicalVelocity = Math.max(1.5, Math.min(60, baseVelocity));
+            
+            // 物理計算：h = v²/(2g)
+            const calculatedMaxHeight = (physicalVelocity * physicalVelocity) / (2 * gravity);
+            maxHeight = Math.round(calculatedMaxHeight);
+            
+            // 着地時間：t = 2v/g
+            const exactLandingTime = (2 * physicalVelocity) / gravity;
+            landingTime = Math.ceil(exactLandingTime);
+            
+            updateStats();
+            generateTable();
+        }
+
+        function updateStats() {
+            document.getElementById('initialVelocity').textContent = initialVelocity.toFixed(1) + ' px/s';
+            document.getElementById('maxHeight').textContent = maxHeight + ' m';
+            document.getElementById('landingTime').textContent = landingTime + ' 秒';
+        }
+
+        function generateTable() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            const gravity = 9.8;
+            
+            for (let t = 0; t <= landingTime; t++) {
+                // 放物線の方程式：h(t) = v₀t - (1/2)gt²
+                const calculatedHeight = physicalVelocity * t - 0.5 * gravity * t * t;
+                const height = Math.max(0, Math.round(calculatedHeight));
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${t}</td>
+                    <td>${height}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+        }
+
+        function startFireworkAnimation() {
+            if (isAnimating) return;
+            isAnimating = true;
+            
+            firework.style.opacity = '1';
+            firework.style.bottom = '10px';
+            firework.style.transition = 'none';
+            
+            const gravity = 9.8;
+            const totalTime = landingTime;
+            const maxHeightTime = physicalVelocity / gravity;
+            
+            let animationStartTime = Date.now();
+            let hasExploded = false;
+            
+            const scrollAreaHeight = 580;
+            
+            // スクロールエリアの表示を花火の位置に合わせる
+            function adjustScrollView(fireworkPosition) {
+                const fireworkPixelPosition = fireworkPosition;
+                const scrollAreaMiddle = scrollArea.clientHeight / 2;
+                const targetScrollTop = Math.max(0, Math.min(
+                    scrollContent.clientHeight - scrollArea.clientHeight,
+                    scrollContent.clientHeight - fireworkPixelPosition - scrollAreaMiddle
+                ));
+                scrollArea.scrollTop = targetScrollTop;
+            }
+            
+            function animate() {
+                const elapsed = (Date.now() - animationStartTime) / 1000;
+                
+                if (elapsed >= totalTime) {
+                    firework.style.bottom = '10px';
+                    firework.style.opacity = '0.5';
+                    adjustScrollView(10);
+                    setTimeout(() => {
+                        firework.style.opacity = '0.3';
+                        isAnimating = false;
+                    }, 1000);
+                    return;
+                }
+                
+                // 放物線運動の計算
+                const calculatedCurrentHeight = physicalVelocity * elapsed - 0.5 * gravity * elapsed * elapsed;
+                const currentHeight = Math.max(0, calculatedCurrentHeight);
+                
+                // 高度をピクセル位置に変換（比例スケール）
+                const heightRatio = maxHeight > 0 ? currentHeight / maxHeight : 0;
+                const pixelHeight = Math.min(scrollAreaHeight, heightRatio * scrollAreaHeight) + 10;
+                
+                firework.style.bottom = pixelHeight + 'px';
+                adjustScrollView(pixelHeight);
+                
+                // 最高点付近で爆発
+                if (!hasExploded && elapsed >= maxHeightTime * 0.95 && elapsed <= maxHeightTime * 1.05) {
+                    createExplosion(pixelHeight);
+                    hasExploded = true;
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+
+        function createExplosion(height) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.style.bottom = height + 'px';
+            scrollContent.appendChild(explosion);
+            
+            setTimeout(() => {
+                if (explosion.parentNode) {
+                    explosion.parentNode.removeChild(explosion);
+                }
+            }, 2000);
+        }
+
+        function resetMeasurement() {
+            hasScrolled = false;
+            initialVelocity = 0;
+            maxHeight = 0;
+            landingTime = 0;
+            isAnimating = false;
+            physicalVelocity = 0;
+            lastScrollTop = 0;
+            lastScrollTime = 0;
+            scrollVelocities = [];
+            
+            document.getElementById('initialVelocity').textContent = '未計測';
+            document.getElementById('maxHeight').textContent = '未計測';
+            document.getElementById('landingTime').textContent = '未計測';
+            
+            firework.style.opacity = '1';
+            firework.style.bottom = '10px';
+            
+            const explosions = scrollContent.querySelectorAll('.explosion');
+            explosions.forEach(explosion => explosion.remove());
+            
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '<tr><td colspan="2">スクロールして計測開始</td></tr>';
+            
+            scrollArea.scrollTop = scrollArea.scrollHeight;
+        }
+
+        window.onload = function() {
+            scrollArea.scrollTop = scrollArea.scrollHeight;
+        };
+    </script>
+</body>
+</html>
